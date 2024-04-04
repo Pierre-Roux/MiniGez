@@ -9,77 +9,87 @@ public class Playermouvement : MonoBehaviour
     private int currentCurvesIndex = 0; // Index of the current segment of the curve
     private List<Transform> controlPoints = new List<Transform>(); // Array to hold control points
     public float speed = 0.1f; // Speed of player movement
-    private int currentSegmentIndex = 0; // Index of the current segment of the curve
+    public float RotationSpeed = 0.1f; // Speed of player rotation
     private float t = 0.1f; // Parameter to interpolate along the curve
-    private Boolean NextCurve = true; // Boolean to control the affectation of child in update
     private Boolean StopCart = false; // Boolean to control the end of the path for the cart
+    private Boolean CurveBehavior = false; // Boolean to control if we are currently in a curve or not
+    private Vector3 nextCurveStartPosition; // Store the start position of the next curve
+
+
+
+        private Vector3 previousPosition;
+    private float previousTime;
+
+    void Start()
+    {
+        nextCurveStartPosition = Curves[currentCurvesIndex].GetChild(0).position;
+        previousPosition = transform.position;
+    }
 
     void Update()
     {
 
-        if (NextCurve == true && StopCart == false) 
+        if (CurveBehavior == true)
         {
-            if (currentCurvesIndex >= 0 && currentCurvesIndex < Curves.Count) {
-                if (Curves[currentCurvesIndex] != null )
-                {
-                    // Iterate through each child object of the curves parent
-                    for (int i = 0; i < Curves[currentCurvesIndex].childCount; i++)
+            if (StopCart == false) 
+            {
+                if (currentCurvesIndex >= 0 && currentCurvesIndex < Curves.Count) {
+                    if (Curves[currentCurvesIndex] != null )
                     {
-                        Debug.Log(controlPoints);
-                        Debug.Log(Curves[currentCurvesIndex]);
-                        Debug.Log(Curves[currentCurvesIndex].GetChild(i).transform);
-                        controlPoints.Add(Curves[currentCurvesIndex].GetChild(i).transform);
+                        // Iterate through each child object of the curves parent
+                        for (int i = 0; i < Curves[currentCurvesIndex].childCount; i++)
+                        {
+                            controlPoints.Add(Curves[currentCurvesIndex].GetChild(i).transform);
+                        }
+
+                        // Store the start position of the next curve
+                        if (currentCurvesIndex + 1 < Curves.Count)
+                        {
+                            nextCurveStartPosition = Curves[currentCurvesIndex + 1].GetChild(0).position;
+                        }
                     }
-
-                    // Authorize Next Curve
-                    NextCurve = false;
+                } 
+                else 
+                {
+                    // Stop the cart it's the end off the road babe
+                    StopCart = true;
                 }
-            } 
-            else 
-            {
-                StopCart = true;
             }
-        }
 
-        if (StopCart == false ) {
-            // Move towards the point on the curve corresponding to parameter t
-            transform.position = CalculateBezierPoint(controlPoints[currentSegmentIndex].position, 
-                                                    controlPoints[currentSegmentIndex + 1].position, 
-                                                    controlPoints[currentSegmentIndex + 2].position, 
-                                                    controlPoints[currentSegmentIndex + 3].position, 
-                                                    t);
+            if (StopCart == false ) {
+                // Move towards the point on the curve corresponding to parameter t
+                transform.position = CalculateBezierPoint(controlPoints[0].position, 
+                                                        controlPoints[ 1].position, 
+                                                        controlPoints[2].position, 
+                                                        controlPoints[3].position, 
+                                                        t);
 
-            // Calculate tangent of the curve at the current parameter t
-            Vector3 tangent = CalculateBezierTangent(controlPoints[currentSegmentIndex].position,
-                                                    controlPoints[currentSegmentIndex + 1].position,
-                                                    controlPoints[currentSegmentIndex + 2].position,
-                                                    controlPoints[currentSegmentIndex + 3].position,
-                                                    t);
+                // Calculate tangent of the curve at the current parameter t
+                Vector3 tangent = CalculateBezierTangent(controlPoints[0].position,
+                                                        controlPoints[1].position,
+                                                        controlPoints[2].position,
+                                                        controlPoints[3].position,
+                                                        t);
 
-            // Calculate rotation angle around z-axis
-            float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg;
+                // Calculate rotation angle around z-axis
+                float targetAngle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg;
 
-            // Apply rotation around z-axis
-            transform.rotation = Quaternion.Euler(0f, 0f, angle);
-        
-            // Increment parameter t based on speed
-            t += speed * Time.deltaTime;
-
+                // Smoothly rotate the object towards the target angle
+                Quaternion targetRotation = Quaternion.Euler(0f, 0f, targetAngle);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed);
             
-            // Check if we've reached the end of the current segment
-            if (t >= 1f)
-            {
-                // Move to the next segment
-                currentSegmentIndex += 3;
+                // Increment parameter t based on speed
+                t += speed * Time.deltaTime;
 
-                // Reset parameter t
-                t = 0f;
+                var velocity = (transform.position - previousPosition) / Time.deltaTime;
+                Debug.Log("Velocity Curve : " + velocity.magnitude);
+                previousPosition = transform.position;
 
                 // Check if we've reached the end of the curve
-                if (currentSegmentIndex >= controlPoints.Count - 1)
+                if (t >= 1f)
                 {
-                    // Optionally, loop back to the beginning of the curve
-                    currentSegmentIndex = 0;
+                    // Reset parameter t
+                    t = 0f;
                     
                     // Move to the next curve
                     currentCurvesIndex += 1;
@@ -87,11 +97,53 @@ public class Playermouvement : MonoBehaviour
                     // Clear controlPoint
                     controlPoints.Clear();
 
-                    // Authorize Next Curve
-                    NextCurve = true;
+                    // When we end a curve we stop using curve behavior
+                    CurveBehavior = false;
+
+                    // Store the start position of the next curve
+                    if (currentCurvesIndex + 1 < Curves.Count)
+                    {
+                        nextCurveStartPosition = Curves[currentCurvesIndex + 1].GetChild(0).position;
+                    }
+
+                    Debug.Log("Fin de curve");
+                    
                 }
             }
         }
+        else
+        {
+            if (nextCurveStartPosition == transform.position)
+            {
+                CurveBehavior = true;
+                t = 0f;
+            }
+            else
+            {
+                if (currentCurvesIndex+1 > Curves.Count) {
+                    StopCart = true;
+                }
+
+                if (StopCart == false) {
+                    t = speed * Time.deltaTime * 15;
+
+                    var velocity = (transform.position - previousPosition) / Time.deltaTime;
+                    Debug.Log("Velocity Move : " + velocity.magnitude);
+                    previousPosition = transform.position;
+
+                    // Interpolate position towards the start position of the next curve
+                    transform.position = Vector3.MoveTowards(transform.position, nextCurveStartPosition,t);
+
+                    Vector3 direction = nextCurveStartPosition - transform.position;
+                    // Calculate rotation angle around z-axis
+                    float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                    // Smoothly rotate the object towards the target angle
+                    Quaternion targetRotation = Quaternion.Euler(0f, 0f, targetAngle);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed);
+                }
+            }
+        }
+
     }
 
     private Vector3 CalculateBezierPoint(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
