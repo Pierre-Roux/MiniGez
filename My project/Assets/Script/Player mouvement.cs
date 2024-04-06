@@ -76,21 +76,19 @@ public class Playermouvement : MonoBehaviour
 
                 // Smoothly rotate the object towards the target angle
                 Quaternion targetRotation = Quaternion.Euler(0f, 0f, targetAngle);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
             
                 // Increment parameter t based on speed
                 t += speed * Time.deltaTime;
-
-                var velocity = (transform.position - previousPosition) / Time.deltaTime;
-                Debug.Log("Velocity Curve : " + velocity.magnitude);
-                previousPosition = transform.position;
 
                 // Check if we've reached the end of the curve
                 if (t >= 1f)
                 {
                     // Reset parameter t
                     t = 0f;
-                    
+
+                    Debug.Log("Fin de curve " + currentCurvesIndex);
+
                     // Move to the next curve
                     currentCurvesIndex += 1;
 
@@ -103,10 +101,8 @@ public class Playermouvement : MonoBehaviour
                     // Store the start position of the next curve
                     if (currentCurvesIndex + 1 < Curves.Count)
                     {
-                        nextCurveStartPosition = Curves[currentCurvesIndex + 1].GetChild(0).position;
+                        nextCurveStartPosition = Curves[currentCurvesIndex].GetChild(0).position;
                     }
-
-                    Debug.Log("Fin de curve");
                     
                 }
             }
@@ -127,9 +123,7 @@ public class Playermouvement : MonoBehaviour
                 if (StopCart == false) {
                     t = speed * Time.deltaTime * 15;
 
-                    var velocity = (transform.position - previousPosition) / Time.deltaTime;
-                    Debug.Log("Velocity Move : " + velocity.magnitude);
-                    previousPosition = transform.position;
+                    Debug.Log("Forward : " + nextCurveStartPosition);
 
                     // Interpolate position towards the start position of the next curve
                     transform.position = Vector3.MoveTowards(transform.position, nextCurveStartPosition,t);
@@ -137,9 +131,10 @@ public class Playermouvement : MonoBehaviour
                     Vector3 direction = nextCurveStartPosition - transform.position;
                     // Calculate rotation angle around z-axis
                     float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+                    
                     // Smoothly rotate the object towards the target angle
                     Quaternion targetRotation = Quaternion.Euler(0f, 0f, targetAngle);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
                 }
             }
         }
