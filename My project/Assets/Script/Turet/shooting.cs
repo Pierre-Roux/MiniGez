@@ -7,18 +7,19 @@ public class shooting : MonoBehaviour
     private Camera mainCam;
     private Vector3 mousePos; 
     public GameObject bullet;
-    public Transform bulletTransform;
-    public bool canFire;
-    private float timer;
-    public float timeBetweenFiring;
-    public float minDistanceToFire ;
-    public Transform Player;
     public GameObject reversebullet;
+    public Transform bulletTransform;
+    private bool canFire;
+    private float timer;
+    public float FireRate;
+    private float minDistanceToFire ;
+    public Transform Player;
+
 
     // Start is called before the first frame update
     void Start()
     {
-        minDistanceToFire= 13.08f;
+        minDistanceToFire= 10.145f;
         mainCam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();   
     }
 
@@ -26,35 +27,26 @@ public class shooting : MonoBehaviour
     void Update()
     {
         mousePos = mainCam.ScreenToWorldPoint(Input.mousePosition);   
-
+       
         Vector3 rotation = mousePos - transform.position; 
 
         float rotZ = Mathf.Atan2(rotation.y, rotation.x) * Mathf.Rad2Deg;
-
-        transform.rotation = Quaternion.Euler(0, 0, rotZ);
+        transform.rotation = Quaternion.Euler(0, 0, rotZ+90);
 
         if(!canFire)
         {
            timer += Time.deltaTime;
-           if(timer > timeBetweenFiring)
+           if(timer > FireRate)
            {
                 canFire = true;
                 timer = 0;
-
-
            }
         }
-
-        Debug.Log("distance souris : "+Vector3.Distance(Player.transform.position, mousePos));
-        Debug.Log(minDistanceToFire);
         
-        
-
         // Si ma disctance souris est plus grande que ma distance minimal
         // canfire devient faux
         if (Input.GetMouseButton(0) && canFire)
         {
-                
             if (Vector3.Distance(Player.transform.position, mousePos) > minDistanceToFire)
             {
                 Instantiate(bullet, bulletTransform.position, Quaternion.identity);
@@ -66,10 +58,7 @@ public class shooting : MonoBehaviour
                 Instantiate(reversebullet, bulletTransform.position, Quaternion.identity);
                 canFire = false;
             }
-            
-        
         }
-        
     }
 }
 

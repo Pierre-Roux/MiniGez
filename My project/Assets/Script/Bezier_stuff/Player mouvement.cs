@@ -15,15 +15,9 @@ public class Playermouvement : MonoBehaviour
     private Boolean CurveBehavior = false; // Boolean to control if we are currently in a curve or not
     private Vector3 nextCurveStartPosition; // Store the start position of the next curve
 
-
-
-        private Vector3 previousPosition;
-    private float previousTime;
-
     void Start()
     {
         nextCurveStartPosition = Curves[currentCurvesIndex].GetChild(0).position;
-        previousPosition = transform.position;
     }
 
     void Update()
@@ -87,8 +81,6 @@ public class Playermouvement : MonoBehaviour
                     // Reset parameter t
                     t = 0f;
 
-                    Debug.Log("Fin de curve " + currentCurvesIndex);
-
                     // Move to the next curve
                     currentCurvesIndex += 1;
 
@@ -122,8 +114,6 @@ public class Playermouvement : MonoBehaviour
 
                 if (StopCart == false) {
                     t = speed * Time.deltaTime * 15;
-
-                    Debug.Log("Forward : " + nextCurveStartPosition);
 
                     // Interpolate position towards the start position of the next curve
                     transform.position = Vector3.MoveTowards(transform.position, nextCurveStartPosition,t);
