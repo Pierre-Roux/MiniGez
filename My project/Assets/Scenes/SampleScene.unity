@@ -4884,6 +4884,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: CruelBat_Hive
       objectReference: {fileID: 0}
+    - target: {fileID: 7475266442342063029, guid: 972f49e095cb3e24e86b4bf1de0a2d76, type: 3}
+      propertyPath: SpawnRate
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 8946065427201098905, guid: 972f49e095cb3e24e86b4bf1de0a2d76, type: 3}
       propertyPath: m_LocalPosition.x
       value: -9.96
