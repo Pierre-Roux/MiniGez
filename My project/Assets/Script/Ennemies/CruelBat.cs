@@ -33,11 +33,7 @@ public class CruelBat : MonoBehaviour
             transform.position = Vector3.MoveTowards(transform.position, Player.transform.position,t);
             Vector3 direction = Player.transform.position - transform.position;
 
-            // Calculate rotation angle around z-axis
-            float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            // Smoothly rotate the object towards the target angle
-            Quaternion targetRotation = Quaternion.Euler(0f, 0f, targetAngle);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, RotationSpeed * Time.deltaTime);
+
         }
     }
 
