@@ -2,20 +2,22 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CurelBat_Hive : MonoBehaviour
+public class Gates_Spawner1 : MonoBehaviour
 {
-    public CruelBat Ennemie;
+    public Mob1 Ennemie;
+    private Mob1 LastSpawned;
+    public GameObject EndZone;
     public float SpawnRate;
     public int MaxLife;
     public int CurrentLife;
     private bool canSpawn;
     private float timer;
 
-    // Start is called before the first frame update
+    // Start is called before the first  frame update
     void Start()
     {
         CurrentLife = MaxLife;
-        canSpawn = false;
+        canSpawn = true;
     }
 
     // Update is called once per frame
@@ -33,25 +35,10 @@ public class CurelBat_Hive : MonoBehaviour
 
         if (canSpawn) 
         {
-            Instantiate(Ennemie, transform.position, Quaternion.identity);
+            LastSpawned = Instantiate(Ennemie, transform.position + new Vector3(1,1,0), Quaternion.identity);
+            LastSpawned.gameObject.GetComponent<Mob1>().EndZone = EndZone;
             canSpawn = false;
         }
         
     }
-
-    void OnCollisionEnter2D(Collision2D ObjectCollide)
-    {
-        if (ObjectCollide.gameObject.CompareTag("Bullet"))
-        {
-            if (CurrentLife <= 0)
-            {
-                Object.Destroy(this.gameObject);  
-            }
-            else
-            {
-                CurrentLife += -1;
-            }
-        }
-    }
-
 }

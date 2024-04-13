@@ -2,10 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerStatus : MonoBehaviour
+public class Def_Wall_Behavior : MonoBehaviour
 {
-
-    public int MaxLife = 10;
+    public int MaxLife;
     public int CurrentLife;
 
     // Start is called before the first frame update
@@ -17,9 +16,11 @@ public class PlayerStatus : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (CurrentLife <= 0)
-        {
-            Object.Destroy(this.gameObject);  
-        }        
+
+    }
+
+    void OnCollisionStay2D(Collision2D ObjectCollide)
+    {
+
     }
 }
