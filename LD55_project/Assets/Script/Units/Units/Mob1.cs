@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using FMODUnity;
+using Spine.Unity;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -17,40 +19,50 @@ public class Mob1 : MonoBehaviour
     public CircleCollider2D CircleCollide;
     private String Etat;
     private Collider2D ColliderInFight;
+    private GameManagerScript GameManager;
+    private bool Dead;
+
 
     // Start is called before the first frame update
     void Start()
     {
-        //EndZone = GameObject.FindGameObjectWithTag("EndZone").GetComponent<Transform>(); 
+        GameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManagerScript>();
         canAttack = true;
         CurrentLife = MaxLife;
         gameObject.tag = "Units"; 
         Etat = "Move";
+        GameManager.UnitsOnBoard.Add(this.gameObject);
+        Dead = false;
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Etat == "Move")
+        if (!Dead)
         {
-            if (EndZone != null) 
+            if (Etat == "Move")
             {
-                t = speed * Time.deltaTime;
-                transform.position = Vector3.MoveTowards(transform.position, EndZone.transform.position,t);
+                if (EndZone != null) 
+                {
+                    t = speed * Time.deltaTime;
+                    transform.position = Vector3.MoveTowards(transform.position, EndZone.transform.position,t);
+                }
             }
-        }
-        else
-        {
-            if (EndZone != null) 
+            else
             {
-                t = speed * Time.deltaTime / 1000;
-                transform.position = Vector3.MoveTowards(transform.position, EndZone.transform.position,t); 
-            }       
-        }
+                if (EndZone != null) 
+                {
+                    t = speed * Time.deltaTime / 1000;
+                    transform.position = Vector3.MoveTowards(transform.position, EndZone.transform.position,t); 
+                }       
+            }
 
-        if (ColliderInFight.IsDestroyed())
-        {
-            Etat = "Move";
+            if (ColliderInFight.IsDestroyed())
+            {
+                Etat = "Move";
+                GetComponent<SkeletonAnimation>().AnimationName = "FLY"; 
+            }
         }
     }
 
@@ -63,6 +75,8 @@ public class Mob1 : MonoBehaviour
             {
                 ColliderInFight = ObjectCollide;
                 Etat = "Fight";
+                GetComponent<SkeletonAnimation>().AnimationName = "ATTACK";
+
                 if(!canAttack)
                 {
                     timer += Time.deltaTime;
@@ -75,23 +89,32 @@ public class Mob1 : MonoBehaviour
 
                 if (canAttack) 
                 {
-                    Debug.Log("hit Wall");
                     // Do something when the player enters the trigger
                     ObjectCollide.gameObject.GetComponent<Def_Wall_Behavior>().CurrentLife += -1;
                     if (ObjectCollide.gameObject.GetComponent<Def_Wall_Behavior>().CurrentLife <= 0) 
                     {
                         if (ObjectCollide != null)
                         {
-                            Destroy(ObjectCollide.gameObject); 
+                            ObjectCollide.transform.GetComponent<PolygonCollider2D>().enabled = false;
+                            if (ObjectCollide.name.Contains("Barricade"))
+                            {
+                                StartCoroutine(DeathBarricade(ObjectCollide));
+                            }
+                            ObjectCollide.transform.GetComponent<SpriteRenderer>().sprite = ObjectCollide.transform.GetComponent<Def_Wall_Behavior>().Wall_KO; 
                         }
                         Etat = "Move";
+                        GetComponent<SkeletonAnimation>().AnimationName = "FLY";
                     }
                     Etat = "Move";
+                    GetComponent<SkeletonAnimation>().AnimationName = "FLY";
                     canAttack = false;
                 }
             } else if (ObjectCollide.gameObject.CompareTag("Tower"))
             {
+                ColliderInFight = ObjectCollide;
                 Etat = "Fight";
+                GetComponent<SkeletonAnimation>().AnimationName = "ATTACK";
+
                 if(!canAttack)
                 {
                     timer += Time.deltaTime;
@@ -104,36 +127,69 @@ public class Mob1 : MonoBehaviour
 
                 if (canAttack) 
                 {
-                    Debug.Log("hit Tower");
                     // Do something when the player enters the trigger
                     ObjectCollide.gameObject.GetComponent<Def_Wall_Behavior>().CurrentLife += -1;
                     if (ObjectCollide.gameObject.GetComponent<Def_Wall_Behavior>().CurrentLife <= 0) 
                     {
-                        if (ObjectCollide != null)
-                        {
-                            Destroy(ObjectCollide.transform.parent.gameObject); 
+                        Debug.Log("Nom de la tour casse   " + ObjectCollide.name);
+                        if (ObjectCollide.name.Contains("Sprite"))
+                        { 
+                            StartCoroutine(DeathTower(ObjectCollide));
                         }
                         Etat = "Move";
+                        GetComponent<SkeletonAnimation>().AnimationName = "FLY";
                     }
                     canAttack = false;
                 }
             }
             else if (ObjectCollide.gameObject.CompareTag("Bullet"))
             {
-                if (ObjectCollide.gameObject.GetComponent<bulletscript>().AlreadyHit == false)
-                {
                     CurrentLife += -1;
                     if (CurrentLife <= 0)
                     {
-                        Destroy(this.gameObject);  
+                        GameManager.CurrentLife += -1;
+                        StartCoroutine(DeathAnim()); 
                     }
-                }
-                ObjectCollide.gameObject.GetComponent<bulletscript>().AlreadyHit = true;
+            } 
+            else if (ObjectCollide.gameObject.CompareTag("EndZone"))
+            {
+                Destroy(this.gameObject);       
             } 
         }
         catch
         {
             Etat = "Move";
+            GetComponent<SkeletonAnimation>().AnimationName = "FLY";
         }  
+    }
+
+    IEnumerator DeathAnim()
+    {
+        Dead = true;
+        GetComponent<StudioEventEmitter>().Play();
+        GetComponent<CircleCollider2D>().enabled = false;
+        GetComponent<CapsuleCollider2D>().enabled = false;
+        GetComponent<SkeletonAnimation>().AnimationName = "DEATH";
+        yield return new WaitForSeconds(0.8f); 
+        Destroy(this.gameObject);  
+        yield break;
+    }
+
+    IEnumerator DeathBarricade(Collider2D ObjectCollide)
+    {
+        ObjectCollide.transform.GetComponent<StudioEventEmitter>().Play();
+        yield return new WaitForSeconds(2f); 
+        Destroy(ObjectCollide.gameObject); 
+        yield break;
+    }
+
+    IEnumerator DeathTower(Collider2D ObjectCollide)
+    {
+        ObjectCollide.transform.GetComponent<StudioEventEmitter>().Play();
+        yield return new WaitForSeconds(1f); 
+        ObjectCollide.transform.GetComponent<PolygonCollider2D>().enabled = false;
+        ObjectCollide.transform.GetComponent<SpriteRenderer>().sprite = ObjectCollide.transform.GetComponent<Def_Wall_Behavior>().Tower_KO;
+        ObjectCollide.transform.parent.transform.GetComponent<Tower>().enabled = false; 
+        yield break;
     }
 }

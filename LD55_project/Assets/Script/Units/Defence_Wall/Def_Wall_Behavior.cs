@@ -7,6 +7,9 @@ public class Def_Wall_Behavior : MonoBehaviour
     public int MaxLife;
     public int CurrentLife;
 
+    public Sprite Tower_KO;
+    public Sprite Wall_KO;
+
     // Start is called before the first frame update
     void Start()
     {

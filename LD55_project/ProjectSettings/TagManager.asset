@@ -8,6 +8,9 @@ TagManager:
   - Units
   - Defence
   - Bullet
+  - Enemy
+  - Tower
+  - GameManager
   layers:
   - Default
   - TransparentFX
@@ -15,8 +18,8 @@ TagManager:
   - 
   - Water
   - UI
-  - 
-  - 
+  - Bullets
+  - Defences
   - 
   - 
   - 
