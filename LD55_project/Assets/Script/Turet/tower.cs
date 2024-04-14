@@ -13,32 +13,19 @@ public class Tower : MonoBehaviour
 
     void Start()
     {
-        
+        timer = fireRate;
     }
 
     void Update()
     {
-        timer += Time.deltaTime;
 
-        if (timer >= fireRate)
-        {
-            timer = 0f;
-        }
-
-    }
-
-
-    void Shoot()
-    {
-        Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
-        
     }
 
     // Déclenché lorsque quelque chose entre dans la zone du déclencheur
     private void OnTriggerStay2D(Collider2D other)
     {
         // Vérifie si l'objet qui est entré est un ennemi (vous pouvez ajouter d'autres conditions ici si nécessaire)
-        if (other.CompareTag("Enemy"))
+        if (other.CompareTag("Units"))
         {
             timer += Time.deltaTime;
 
@@ -54,7 +41,6 @@ public class Tower : MonoBehaviour
     }
     void LaunchProjectile(Vector3 targetPosition)
     {
-       
         // Instancie le projectile au point de lancement
         GameObject projectileInstance = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
         

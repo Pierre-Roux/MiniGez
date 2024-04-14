@@ -22,4 +22,11 @@ public class bulletscript : MonoBehaviour
     {
         
     }
+    private void OnTriggerStay2D(Collider2D ObjectCollide)
+    {
+      if (ObjectCollide.gameObject.CompareTag("Units"))
+      {
+        Destroy(this.gameObject);
+      }
+    }
 }

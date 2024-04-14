@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Timer_Delete : MonoBehaviour
 {
+    public float Time; 
     // When the sprite appear 
     private void Awake()
     {
@@ -13,7 +14,7 @@ public class Timer_Delete : MonoBehaviour
     // create a delay for 2 seconds after that destroy the object 
     IEnumerator waiter()
     {
-      yield return new WaitForSeconds(2);
+      yield return new WaitForSeconds(Time);
       Object.Destroy(this.gameObject);  
     }
 }
